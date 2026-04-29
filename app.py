@@ -1,15 +1,23 @@
-import customtkinter as ctk
-from tkinter import filedialog, messagebox
+import io
+import os
 import threading
 import time
-import os
-import io
 import datetime
 from pathlib import Path
+from tkinter import filedialog, messagebox
 
-import pdf2image
-import pytesseract
-from pypdf import PdfWriter, PdfReader
+try:
+    import customtkinter as ctk
+    import pdf2image
+    import pytesseract
+    from pypdf import PdfWriter, PdfReader
+except ModuleNotFoundError as e:
+    missing = str(e).split("'")[1] if "'" in str(e) else str(e)
+    raise SystemExit(
+        f"Dependência ausente: {missing}.\n"
+        "Instale com: pip install -r requirements.txt\n"
+        "Ou rode o script run.sh (Linux/macOS) / build_exe.bat (Windows)."
+    )
 
 ctk.set_appearance_mode("dark")
 MAIN_COLOR = "#B06A7C"
@@ -169,6 +177,14 @@ class AppJuridico(ctk.CTk):
         if not self.arquivos_selecionados:
             messagebox.showwarning("Aviso", "Selecione ao menos 1 PDF.")
             return
+        try:
+            split_n = int(self.max_paginas_entry.get() or "50")
+            if split_n <= 0:
+                raise ValueError
+        except ValueError:
+            messagebox.showerror("Valor inválido", "Defina um número inteiro positivo para dividir páginas.")
+            return
+
         self.is_processing = True
         self.is_cancelled = False
         self.btn_iniciar.configure(state="disabled")
